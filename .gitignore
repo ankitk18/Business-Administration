@@ -23,7 +23,7 @@
 # misc
 .DS_Store
 *.pem
-
+READMEDEV.md
 # debug
 npm-debug.log*
 yarn-debug.log*
