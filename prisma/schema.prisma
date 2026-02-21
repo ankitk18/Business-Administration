@@ -1,185 +1,156 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+//////////////////////////////////////////////////////
+// PRISMA CLIENT GENERATOR
+//////////////////////////////////////////////////////
 
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
 }
 
+//////////////////////////////////////////////////////
+// DATABASE CONNECTION
+//////////////////////////////////////////////////////
+
 datasource db {
   provider = "postgresql"
 }
 
 //////////////////////////////////////////////////////
-// TENANCY CORE
+// COMPANY (TENANT ROOT)
 //////////////////////////////////////////////////////
 
 model Company {
-  id            String    @id @default(cuid())
-  name          String
-  subdomain     String    @unique
-  plan          PlanType  @default(FREE)
-  status        Status    @default(ACTIVE)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id          String      @id @default(cuid())
+  name        String
+  plan        PlanType    @default(FREE)
+  status      Status      @default(ACTIVE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  users         User[]
-  departments   Department[]
-  employees     Employee[]
-  customers     Customer[]
-  products      Product[]
-  invoices      Invoice[]
-  payments      Payment[]
+  // RELATIONS
+  users       User[]
+  departments Department[]
+  employees   Employee[]
+  customers   Customer[]
+  payments    Payment[]
 
   @@map("companies")
 }
 
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String
-  name          String
-  role          UserRole  @default(USER)
-  companyId     String
-  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+//////////////////////////////////////////////////////
+// USER (LOGIN ACCOUNT)
+//////////////////////////////////////////////////////
 
-  @@index([companyId])
-  @@map("users")
+model User {
+  id        String   @id @default(cuid())
+
+  email     String
+  password  String
+  name      String
+  role      UserRole
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, email])  // composite unique index
+  @@index([companyId])          // company queries optimization
 }
 
 //////////////////////////////////////////////////////
-// ERP MODULES
+// DEPARTMENT
 //////////////////////////////////////////////////////
 
 model Department {
-  id            String    @id @default(cuid())
-  name          String
-  description   String?
-  companyId     String
-  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  employees     Employee[]
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+
+  companyId   String
+  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  employees   Employee[]
 
   @@unique([name, companyId])
   @@index([companyId])
   @@map("departments")
 }
 
+//////////////////////////////////////////////////////
+// EMPLOYEE
+//////////////////////////////////////////////////////
+
 model Employee {
-  id            String    @id @default(cuid())
+  id            String      @id @default(cuid())
+
   employeeCode  String
   name          String
   email         String?
   phone         String?
+
   position      String
-  salary        Decimal?  @db.Decimal(10,2)
+  salary        Decimal?    @db.Decimal(10,2)
+
   joinDate      DateTime
+  createdAt     DateTime    @default(now())
+
   departmentId  String
-  department    Department @relation(fields: [departmentId], references: [id])
+  department    Department  @relation(fields: [departmentId], references: [id])
+
   companyId     String
-  company       Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdAt     DateTime   @default(now())
+  company       Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@unique([employeeCode, companyId])
   @@index([companyId])
+  @@index([departmentId])
   @@map("employees")
 }
 
+//////////////////////////////////////////////////////
+// CUSTOMER
+//////////////////////////////////////////////////////
+
 model Customer {
-  id            String    @id @default(cuid())
-  name          String
-  email         String?
-  phone         String?
-  gstin         String?
-  address       String?
-  companyId     String
-  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  invoices      Invoice[]
-  createdAt     DateTime  @default(now())
-  deletedAt     DateTime?
+  id          String     @id @default(cuid())
+
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+
+  companyId   String
+  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime   @default(now())
+  deletedAt   DateTime?
 
   @@index([companyId])
   @@map("customers")
 }
 
-model Product {
-  id            String    @id @default(cuid())
-  name          String
-  description   String?
-  sku           String
-  price         Decimal   @db.Decimal(10,2)
-  stock         Int       @default(0)
-  gstRate       Decimal   @db.Decimal(5,2) @default(18.00)
-  companyId     String
-  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  invoiceItems  InvoiceItem[]
-  createdAt     DateTime  @default(now())
-  deletedAt     DateTime?
-
-  @@unique([sku, companyId])
-  @@index([companyId])
-  @@map("products")
-}
-
 //////////////////////////////////////////////////////
-// INVOICING & PAYMENTS
+// PAYMENT
 //////////////////////////////////////////////////////
-
-model Invoice {
-  id              String        @id @default(cuid())
-  invoiceNumber   String
-  customerId      String
-  customer        Customer      @relation(fields: [customerId], references: [id])
-  companyId       String
-  company         Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  subtotal        Decimal       @db.Decimal(10,2)
-  gstTotal        Decimal       @db.Decimal(10,2)
-  total           Decimal       @db.Decimal(10,2)
-  status          InvoiceStatus @default(DRAFT)
-  dueDate         DateTime
-  issuedDate      DateTime      @default(now())
-  paidAt          DateTime?
-  items           InvoiceItem[]
-  payments        Payment[]
-  razorpayOrderId String?
-  createdAt       DateTime      @default(now())
-  deletedAt       DateTime?
-
-  @@unique([invoiceNumber, companyId])
-  @@index([companyId])
-  @@map("invoices")
-}
-
-model InvoiceItem {
-  id          String   @id @default(cuid())
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id])
-  quantity    Int
-  price       Decimal  @db.Decimal(10,2)
-  gstAmount   Decimal  @db.Decimal(10,2)
-  total       Decimal  @db.Decimal(10,2)
-
-  @@map("invoice_items")
-}
 
 model Payment {
   id                 String        @id @default(cuid())
-  invoiceId          String
-  invoice            Invoice       @relation(fields: [invoiceId], references: [id])
+
+  invoiceId          String?
   companyId          String
+
   company            Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   amount             Decimal       @db.Decimal(10,2)
+
   method             PaymentMethod
   status             PaymentStatus @default(PENDING)
+
   razorpayPaymentId  String?
   razorpayOrderId    String?
   razorpaySignature  String?
+
   paidAt             DateTime?
   createdAt          DateTime      @default(now())
 
@@ -209,14 +180,6 @@ enum UserRole {
   MANAGER
   USER
   VIEWER
-}
-
-enum InvoiceStatus {
-  DRAFT
-  SENT
-  PAID
-  OVERDUE
-  CANCELLED
 }
 
 enum PaymentMethod {
