@@ -1,0 +1,198 @@
+//////////////////////////////////////////////////////
+// PRISMA CLIENT GENERATOR
+//////////////////////////////////////////////////////
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+//////////////////////////////////////////////////////
+// DATABASE CONNECTION
+//////////////////////////////////////////////////////
+
+datasource db {
+  provider = "postgresql"
+}
+
+//////////////////////////////////////////////////////
+// COMPANY (TENANT ROOT)
+//////////////////////////////////////////////////////
+
+model Company {
+  id          String      @id @default(cuid())
+  name        String
+  plan        PlanType    @default(FREE)
+  status      Status      @default(ACTIVE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // RELATIONS
+  users       User[]
+  departments Department[]
+  employees   Employee[]
+  customers   Customer[]
+  payments    Payment[]
+
+  @@map("companies")
+}
+
+//////////////////////////////////////////////////////
+// USER (LOGIN ACCOUNT)
+//////////////////////////////////////////////////////
+
+model User {
+  id        String   @id @default(cuid())
+
+  email     String
+  password  String
+  name      String
+  role      UserRole
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, email])  // composite unique index
+  @@index([companyId])          // company queries optimization
+}
+
+//////////////////////////////////////////////////////
+// DEPARTMENT
+//////////////////////////////////////////////////////
+
+model Department {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+
+  companyId   String
+  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  employees   Employee[]
+
+  @@unique([name, companyId])
+  @@index([companyId])
+  @@map("departments")
+}
+
+//////////////////////////////////////////////////////
+// EMPLOYEE
+//////////////////////////////////////////////////////
+
+model Employee {
+  id            String      @id @default(cuid())
+
+  employeeCode  String
+  name          String
+  email         String?
+  phone         String?
+
+  position      String
+  salary        Decimal?    @db.Decimal(10,2)
+
+  joinDate      DateTime
+  createdAt     DateTime    @default(now())
+
+  departmentId  String
+  department    Department  @relation(fields: [departmentId], references: [id])
+
+  companyId     String
+  company       Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeCode, companyId])
+  @@index([companyId])
+  @@index([departmentId])
+  @@map("employees")
+}
+
+//////////////////////////////////////////////////////
+// CUSTOMER
+//////////////////////////////////////////////////////
+
+model Customer {
+  id          String     @id @default(cuid())
+
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+
+  companyId   String
+  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime   @default(now())
+  deletedAt   DateTime?
+
+  @@index([companyId])
+  @@map("customers")
+}
+
+//////////////////////////////////////////////////////
+// PAYMENT
+//////////////////////////////////////////////////////
+
+model Payment {
+  id                 String        @id @default(cuid())
+
+  invoiceId          String?
+  companyId          String
+
+  company            Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  amount             Decimal       @db.Decimal(10,2)
+
+  method             PaymentMethod
+  status             PaymentStatus @default(PENDING)
+
+  razorpayPaymentId  String?
+  razorpayOrderId    String?
+  razorpaySignature  String?
+
+  paidAt             DateTime?
+  createdAt          DateTime      @default(now())
+
+  @@index([companyId])
+  @@map("payments")
+}
+
+//////////////////////////////////////////////////////
+// ENUMS
+//////////////////////////////////////////////////////
+
+enum PlanType {
+  FREE
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
+  VIEWER
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  UPI
+  NET_BANKING
+  RAZORPAY
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
