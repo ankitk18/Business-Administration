@@ -26,27 +26,30 @@ CREATE TABLE "companies" (
 );
 
 -- CreateTable
-CREATE TABLE "User" (
+CREATE TABLE "departments" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "companyId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "departments_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "role" "UserRole" NOT NULL,
     "companyId" TEXT NOT NULL,
+    "departmentId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "departments" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "companyId" TEXT NOT NULL,
-
-    CONSTRAINT "departments_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -59,9 +62,11 @@ CREATE TABLE "employees" (
     "position" TEXT NOT NULL,
     "salary" DECIMAL(10,2),
     "joinDate" TIMESTAMP(3) NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" TEXT NOT NULL,
     "departmentId" TEXT NOT NULL,
     "companyId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "employees_pkey" PRIMARY KEY ("id")
 );
@@ -75,6 +80,7 @@ CREATE TABLE "customers" (
     "address" TEXT,
     "companyId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "customers_pkey" PRIMARY KEY ("id")
@@ -83,8 +89,6 @@ CREATE TABLE "customers" (
 -- CreateTable
 CREATE TABLE "payments" (
     "id" TEXT NOT NULL,
-    "invoiceId" TEXT,
-    "companyId" TEXT NOT NULL,
     "amount" DECIMAL(10,2) NOT NULL,
     "method" "PaymentMethod" NOT NULL,
     "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
@@ -92,22 +96,30 @@ CREATE TABLE "payments" (
     "razorpayOrderId" TEXT,
     "razorpaySignature" TEXT,
     "paidAt" TIMESTAMP(3),
+    "companyId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "payments_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE INDEX "User_companyId_idx" ON "User"("companyId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "User_companyId_email_key" ON "User"("companyId", "email");
-
--- CreateIndex
 CREATE INDEX "departments_companyId_idx" ON "departments"("companyId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "departments_name_companyId_key" ON "departments"("name", "companyId");
+CREATE UNIQUE INDEX "departments_companyId_name_key" ON "departments"("companyId", "name");
+
+-- CreateIndex
+CREATE INDEX "users_companyId_idx" ON "users"("companyId");
+
+-- CreateIndex
+CREATE INDEX "users_departmentId_idx" ON "users"("departmentId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_companyId_email_key" ON "users"("companyId", "email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "employees_userId_key" ON "employees"("userId");
 
 -- CreateIndex
 CREATE INDEX "employees_companyId_idx" ON "employees"("companyId");
@@ -116,7 +128,10 @@ CREATE INDEX "employees_companyId_idx" ON "employees"("companyId");
 CREATE INDEX "employees_departmentId_idx" ON "employees"("departmentId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "employees_employeeCode_companyId_key" ON "employees"("employeeCode", "companyId");
+CREATE INDEX "employees_userId_idx" ON "employees"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "employees_companyId_employeeCode_key" ON "employees"("companyId", "employeeCode");
 
 -- CreateIndex
 CREATE INDEX "customers_companyId_idx" ON "customers"("companyId");
@@ -125,10 +140,16 @@ CREATE INDEX "customers_companyId_idx" ON "customers"("companyId");
 CREATE INDEX "payments_companyId_idx" ON "payments"("companyId");
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "departments" ADD CONSTRAINT "departments_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "departments" ADD CONSTRAINT "departments_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "users" ADD CONSTRAINT "users_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "users" ADD CONSTRAINT "users_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "departments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "employees" ADD CONSTRAINT "employees_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "employees" ADD CONSTRAINT "employees_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "departments"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
