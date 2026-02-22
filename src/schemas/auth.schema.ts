@@ -30,7 +30,7 @@ export const registerManagerSchema = z.object({
 export const registerEmployeeSchema = z.object({
 
   name: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(6),
   employeeCode: z.string(),
   departmentId: z.string(),
