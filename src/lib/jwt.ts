@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken"
-import bcrypt from "bcrypt"
 
 export interface JwtPayload {
   userId: string;

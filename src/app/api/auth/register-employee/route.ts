@@ -8,9 +8,26 @@ export async function POST(req: NextRequest){
     try{
         //const manager =  authorize(['MANAGER'])(req)
 
-        const {name, email, password, departmentName, position} = await req.json()
-        const companyId = process.env.COMPANY_ID!
+        const {name, email, password, departmentName, position, companySlug} = await req.json()
         const hashed = await bcrypt.hash(password,10)
+
+        const company = await prisma.company.findUnique({
+            where: {
+                slug: companySlug
+            },
+            select: {
+                id: true
+            }
+            })
+
+        if (!company) {
+        return NextResponse.json(
+            { error: "Company not found" },
+            { status: 404 }
+        )
+        }
+
+    const companyId = company.id
 
         const uniqueDepartmentId = await prisma.department.findFirst({
             where: {

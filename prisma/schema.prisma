@@ -22,6 +22,7 @@ provider = "postgresql"
 model Company {
 id          String   @id @default(cuid())
 name        String
+slug        String   @unique
 plan        PlanType @default(FREE)
 status      Status   @default(ACTIVE)
 
