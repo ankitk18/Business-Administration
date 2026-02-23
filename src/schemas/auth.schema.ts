@@ -1,14 +1,31 @@
 import { z } from "zod"
 
 //////////////////////////////////////////////////////
+// COMMON FIELDS
+//////////////////////////////////////////////////////
+
+const baseUserFields = {
+  name: z.string().min(2, "Name is required"),
+  email: z.email("Invalid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  companySlug: z
+    .string()
+    .min(2)
+    .regex(/^[a-z0-9-]+$/, "Invalid Company Slug"),
+  departmentName: z.string().min(2, "Department is required"),
+}
+
+//////////////////////////////////////////////////////
 // LOGIN
 //////////////////////////////////////////////////////
 
 export const loginSchema = z.object({
-
-  email: z.email(),
+  companySlug: z
+    .string()
+    .min(2)
+    .regex(/^[a-z0-9-]+$/, "Invalid Company Slug"),
+  email: z.email("Invalid email"),
   password: z.string().min(6),
-  
 })
 
 //////////////////////////////////////////////////////
@@ -16,11 +33,7 @@ export const loginSchema = z.object({
 //////////////////////////////////////////////////////
 
 export const registerManagerSchema = z.object({
-
-  name: z.string(),
-  email: z.email(),
-  password: z.string().min(6),
-
+  ...baseUserFields
 })
 
 //////////////////////////////////////////////////////
@@ -28,27 +41,17 @@ export const registerManagerSchema = z.object({
 //////////////////////////////////////////////////////
 
 export const registerEmployeeSchema = z.object({
-
-  name: z.string(),
-  email: z.email(),
-  password: z.string().min(6),
-  employeeCode: z.string(),
-  departmentId: z.string(),
-  position: z.string(),
-  salary: z.number(),
-
+  ...baseUserFields,
+  position: z.string().min(2, "Position is required"),
 })
 
 //////////////////////////////////////////////////////
-// REGISTER CUSTOMER
+// REGISTER CUSTOMER (Keep if needed)
 //////////////////////////////////////////////////////
 
 export const registerCustomerSchema = z.object({
-
-  name: z.string(),
-  email: z.string().email(),
-  password: z.string().min(6),
+  name: z.string().min(2),
+  email: z.email(),
   phone: z.string().optional(),
   address: z.string().optional(),
-
 })
