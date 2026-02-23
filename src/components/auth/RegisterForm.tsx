@@ -81,7 +81,7 @@ export default function RegisterForm({ role }: Props) {
   }
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center px-4">
+  <div className="min-h-screen bg-linear-to-br from-slate-100 to-slate-200 flex items-center justify-center px-4">
     <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden grid md:grid-cols-2">
 
       {/* LEFT SIDE - FORM */}
@@ -172,7 +172,7 @@ export default function RegisterForm({ role }: Props) {
 
             <div className="mt-4">
               <label className="text-sm font-medium text-gray-700">
-                Company Slug
+                Company Code
               </label>
               <input
                 name="companySlug"

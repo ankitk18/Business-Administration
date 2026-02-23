@@ -63,7 +63,7 @@ export default function LoginPage() {
 
         <div>
           <label className="text-sm font-medium text-gray-700">
-            Company Slug
+            Company Code
           </label>
           <input
             name="companySlug"
