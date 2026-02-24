@@ -127,6 +127,8 @@ updatedAt     DateTime @updatedAt
 @@index([companyId])
 @@index([departmentId])
 @@index([userId])
+@@index([companyId, departmentId])
+@@index([companyId, departmentId, name])
 
 @@map("employees")
 }
