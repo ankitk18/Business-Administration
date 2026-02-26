@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { updateLeaveStatus } from "@/app/controllers/leave.controller"
+import { updateLeaveStatus } from "@/controllers/leave.controller"
 
 export async function PATCH(
   req: NextRequest,

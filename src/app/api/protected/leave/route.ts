@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { getLeaveRequests } from "@/app/controllers/leave.controller"
+import { getLeaveRequests } from "@/controllers/leave.controller"
 
 export async function GET(req: NextRequest) {
   return getLeaveRequests(req)
