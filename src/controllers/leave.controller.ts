@@ -6,7 +6,7 @@ import { requireAuth } from "@/lib/server-auth"
 export const getLeaveRequests = async (req: NextRequest) => {
   try {
 
-    // 1️⃣ Authenticate (unchanged)
+    // 1️ Authenticate (unchanged)
     const user = await requireAuth()
 
     const { searchParams } = new URL(req.url)

@@ -1,6 +1,5 @@
 import { cookies } from "next/headers"
 import { verifyToken } from "@/lib/jwt"
-import { NextResponse } from "next/server"
 
 export async function requireAuth() {
   const cookieStore = await cookies()

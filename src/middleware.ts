@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { authenticateToken } from "@/middlewares/auth"
 
 /**
  * Middleware function to handle authentication and route protection.
