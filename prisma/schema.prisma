@@ -4,7 +4,7 @@
 
 generator client {
 provider = "prisma-client"
-output   = "../generated/prisma"
+output   = "../src/generated/prisma"
 }
 
 //////////////////////////////////////////////////////
@@ -29,6 +29,7 @@ status      Status   @default(ACTIVE)
 createdAt   DateTime @default(now())
 updatedAt   DateTime @updatedAt
 
+leaveRequests LeaveRequest[]
 users       User[]
 departments Department[]
 employees   Employee[]
@@ -83,6 +84,8 @@ department   Department? @relation(fields: [departmentId], references: [id])
 
 employee     Employee?
 
+reviewedLeaves LeaveRequest[] @relation("LeaveReviewedBy")
+
 createdAt    DateTime @default(now())
 updatedAt    DateTime @updatedAt
 
@@ -119,6 +122,8 @@ department    Department @relation(fields: [departmentId], references: [id])
 companyId     String
 company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+leaveRequests LeaveRequest[]
+
 createdAt     DateTime @default(now())
 updatedAt     DateTime @updatedAt
 
@@ -131,6 +136,46 @@ updatedAt     DateTime @updatedAt
 @@index([companyId, departmentId, name])
 
 @@map("employees")
+}
+
+//////////////////////////////////////////////////////
+// LEAVE REQUEST
+//////////////////////////////////////////////////////
+
+model LeaveRequest {
+  id            String      @id @default(cuid())
+
+  leaveType     LeaveType
+  reason        String?
+
+  startDate     DateTime
+  endDate       DateTime
+  totalDays     Int
+
+  status        LeaveStatus @default(PENDING)
+
+  // Who requested
+  employeeId    String
+  employee      Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Tenant safety
+  companyId     String
+  company       Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Manager who approved/rejected
+  reviewedById  String?
+  reviewedBy    User?       @relation("LeaveReviewedBy", fields: [reviewedById], references: [id])
+
+  reviewedAt    DateTime?
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([companyId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([companyId, status])
+  @@map("leave_requests")
 }
 
 //////////////////////////////////////////////////////
@@ -224,4 +269,19 @@ PENDING
 SUCCESS
 FAILED
 REFUNDED
+}
+
+enum LeaveType {
+  SICK
+  CASUAL
+  VACATION
+  MATERNITY
+  PATERNITY
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

@@ -24,28 +24,10 @@ export function middleware(req: NextRequest) {
 
   // 4. Redirect to login if no token is present
   if (!token) {
-    return NextResponse.redirect(new URL("/api/auth/login", req.url))
-  }
-
-  try {
-    // 5. Verify the token; this usually throws an error if the token is invalid or expired
-    const payload = authenticateToken(token)
-
-    // 6. Clone the request headers and inject user/context data for downstream use
-    const requestHeaders = new Headers(req.headers)
-    requestHeaders.set("x-user-id", payload.userId)
-    requestHeaders.set("x-company-id", payload.companyId)
-    requestHeaders.set("x-role", payload.role)
-
-    // 7. Proceed to the destination with the new headers
-    return NextResponse.next({
-      request: { headers: requestHeaders }
-    })
-
-  } catch {
-    // 8. If token verification fails, redirect back to the login page
     return NextResponse.redirect(new URL("/auth/login", req.url))
   }
+
+  return NextResponse.next()
 }
 
 /**

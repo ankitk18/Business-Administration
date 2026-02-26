@@ -7,6 +7,7 @@ export interface JwtPayload {
   userId: string;
   companyId: string;
   role: string;
+  departmentId?: string;
 }
 
 // Ensure the secret is loaded from environment variables

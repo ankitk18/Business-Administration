@@ -51,7 +51,7 @@ export default function EmployeePage(){
         try{
             setLoading(true)
 
-            const res = await api.get("/employees",{
+            const res = await api.get("/protected/employees",{
                 params: {
                     search: debounceSearch,
                     page,
@@ -157,7 +157,6 @@ export default function EmployeePage(){
                       </div>
                     </td>
 
-                    {/* ✅ NEW POSITION COLUMN */}
                     <td className="px-6 py-4 text-gray-700">
                       {emp.position}
                     </td>

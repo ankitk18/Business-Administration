@@ -42,8 +42,16 @@ export async function POST(req: NextRequest) {
           email: email
         }
       },
-      include: {
-        employee: true
+      select: {
+        id: true,
+        name: true,
+        password: true,
+        role: true,
+        companyId: true,
+        departmentId: true,  
+        employee: {
+          select: { id: true }
+        }
       }
     })
 
@@ -68,7 +76,8 @@ export async function POST(req: NextRequest) {
     const token = generateToken({
       userId: user.id,
       companyId: user.companyId,
-      role: user.role
+      role: user.role,
+      departmentId: user.departmentId ?? undefined
     })
 
     // 6. Response Construction: Return essential user data to the frontend
@@ -78,6 +87,7 @@ export async function POST(req: NextRequest) {
         id: user.id,
         name: user.name,
         role: user.role,
+        departmentId: user.departmentId ?? null,
         employeeId: user.employee?.id || null
       }
     })
